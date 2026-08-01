@@ -27,17 +27,17 @@
 
   <section>
     <h2>Topics</h2>
-    {% if topics %}
+    {% if topic_rows %}
       <ul>
-        {% for topic in topics %}
+        {% for row in topic_rows %}
           <li>
-            <a href="{{ url_for('topic_detail_view', publication_id=publication.id, topic_id=topic.id) }}">
-              {{ topic.label or "Untitled topic" }}
+            <a href="{{ url_for('topic_detail_view', publication_id=publication.id, topic_id=row.topic.id) }}">
+              {{ row.topic.label or "Untitled topic" }}
             </a>
-            {% if topic.keywords %}
+            {% if row.top_keywords %}
               <ul class="keyword-list">
-                {% for keyword in topic.keywords[:8] %}
-                  <li>{{ keyword }}</li>
+                {% for term, weight in row.top_keywords %}
+                  <li>{{ term }}</li>
                 {% endfor %}
               </ul>
             {% endif %}

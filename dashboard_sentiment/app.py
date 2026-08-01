@@ -31,7 +31,23 @@ logger = logging.getLogger("dashboard_sentiment")
 
 PAGE_SIZE = 50
 RELEVANT_COMMENTS_LIMIT = 10
+TOP_KEYWORDS_LIMIT = 8
 SUMMARY_TYPES = ("suggestions", "concerns", "agreements", "disagreements", "overview")
+
+
+def _top_keywords(
+    keywords: dict[str, float] | None, limit: int | None = TOP_KEYWORDS_LIMIT
+) -> list[tuple[str, float]]:
+    """Sort a topic's {term: weight} dict by weight descending.
+
+    `topics.keywords` is stored as jsonb, which does not preserve insertion
+    order, so the Enricher's original weight-descending order can't be
+    trusted once read back - it must be re-sorted here.
+    """
+    if not keywords:
+        return []
+    ranked = sorted(keywords.items(), key=lambda pair: pair[1], reverse=True)
+    return ranked[:limit] if limit is not None else ranked
 
 
 def create_app() -> Flask:
@@ -150,6 +166,7 @@ def publication_detail(publication_id: int):
     topics = db.Session.execute(
         select(Topic).where(Topic.publication_id == publication_id).order_by(Topic.created_at)
     ).scalars().all()
+    topic_rows = [{"topic": topic, "top_keywords": _top_keywords(topic.keywords)} for topic in topics]
 
     summaries = {
         summary_type: db.Session.execute(
@@ -185,7 +202,7 @@ def publication_detail(publication_id: int):
     return render_template(
         "publication_detail.html",
         publication=publication,
-        topics=topics,
+        topic_rows=topic_rows,
         summaries=summaries,
         relevant_comments=relevant_comments,
         latest_stats=latest_stats,
@@ -232,7 +249,11 @@ def topic_detail_view(publication_id: int, topic_id: int):
     ).all()
 
     return render_template(
-        "topic_detail.html", publication=publication, topic=topic, comment_rows=comment_rows
+        "topic_detail.html",
+        publication=publication,
+        topic=topic,
+        top_keywords=_top_keywords(topic.keywords, limit=None),
+        comment_rows=comment_rows,
     )
 
 

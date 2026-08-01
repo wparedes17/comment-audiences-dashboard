@@ -3,10 +3,10 @@
 {% block content %}
   <p><a href="{{ url_for('publication_detail', publication_id=publication.id) }}">&larr; {{ publication.title }}</a></p>
   <h1>{{ topic.label or "Untitled topic" }}</h1>
-  {% if topic.keywords %}
+  {% if top_keywords %}
     <ul class="keyword-list">
-      {% for keyword in topic.keywords %}
-        <li>{{ keyword }}</li>
+      {% for term, weight in top_keywords %}
+        <li>{{ term }} <span class="muted">({{ "%.3f"|format(weight) }})</span></li>
       {% endfor %}
     </ul>
   {% endif %}
