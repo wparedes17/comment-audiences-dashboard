@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ publication.title }} — Dashboard Sentiment{% endblock %}
+{% block content %}
+  <h1>{{ publication.title }}</h1>
+  <p class="muted">
+    Status: {{ publication.status or "—" }}
+    {% if publication.opens_at %} · Opens {{ publication.opens_at.strftime("%Y-%m-%d") }}{% endif %}
+    {% if publication.closes_at %} · Closes {{ publication.closes_at.strftime("%Y-%m-%d") }}{% endif %}
+  </p>
+  {% if publication.description %}<p>{{ publication.description }}</p>{% endif %}
+  <p><a href="{{ url_for('publication_comments', publication_id=publication.id) }}">Browse all comments &rarr;</a></p>
+
+  <section>
+    <h2>Sentiment over time</h2>
+    {% if latest_stats %}
+      <canvas id="sentiment-chart" height="80"></canvas>
+      <script>
+        renderWeeklySentimentChart(
+          "sentiment-chart",
+          "{{ url_for('publication_weekly_sentiment_json', publication_id=publication.id) }}"
+        );
+      </script>
+    {% else %}
+      <p class="empty-state">No sentiment data yet for this publication.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Topics</h2>
+    {% if topics %}
+      <ul>
+        {% for topic in topics %}
+          <li>
+            <a href="{{ url_for('topic_detail_view', publication_id=publication.id, topic_id=topic.id) }}">
+              {{ topic.label or "Untitled topic" }}
+            </a>
+            {% if topic.keywords %}
+              <ul class="keyword-list">
+                {% for keyword in topic.keywords[:8] %}
+                  <li>{{ keyword }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty-state">No topics identified yet for this publication.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Summaries</h2>
+    {% for summary_type, summary in summaries.items() %}
+      <h3>{{ summary_type|capitalize }}</h3>
+      {% if summary %}
+        <p>{{ summary.content }}</p>
+      {% else %}
+        <p class="empty-state">Not yet available.</p>
+      {% endif %}
+    {% endfor %}
+  </section>
+
+  <section>
+    <h2>Most relevant comments</h2>
+    {% if relevant_comments %}
+      <table>
+        <thead>
+          <tr>
+            <th>Author</th>
+            <th>Posted</th>
+            <th>Comment</th>
+            <th>Relevance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for comment, relevance_score in relevant_comments %}
+            <tr>
+              <td>{{ comment.author_name }}</td>
+              <td>{{ comment.posted_at.strftime("%Y-%m-%d %H:%M") if comment.posted_at else "—" }}</td>
+              <td><div class="comment-body">{{ comment.body }}</div></td>
+              <td>{{ "%.3f"|format(relevance_score) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="empty-state">Not yet analyzed.</p>
+    {% endif %}
+  </section>
+{% endblock %}

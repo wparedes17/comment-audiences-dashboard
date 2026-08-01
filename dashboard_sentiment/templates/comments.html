@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ publication.title }} — Comments{% endblock %}
+{% block content %}
+  <p><a href="{{ url_for('publication_detail', publication_id=publication.id) }}">&larr; {{ publication.title }}</a></p>
+  <h1>Comments</h1>
+
+  <form class="search" method="get" action="{{ url_for('publication_comments', publication_id=publication.id) }}">
+    <input type="text" name="q" placeholder="Search comments..." value="{{ q }}">
+    <button type="submit">Search</button>
+    {% if q %}<a href="{{ url_for('publication_comments', publication_id=publication.id) }}">Clear</a>{% endif %}
+  </form>
+
+  {% if rows %}
+    <table>
+      <thead>
+        <tr>
+          <th>Author</th>
+          <th>Posted</th>
+          <th>Sentiment</th>
+          <th>Comment</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for comment, sentiment_label in rows %}
+          <tr>
+            <td>{{ comment.author_name }}</td>
+            <td>{{ comment.posted_at.strftime("%Y-%m-%d %H:%M") if comment.posted_at else "—" }}</td>
+            <td>
+              {% if sentiment_label %}
+                <span class="badge badge-{{ sentiment_label }}">{{ sentiment_label }}</span>
+              {% else %}
+                <span class="badge badge-unlabeled">unlabeled</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="comment-body">{{ comment.body }}</div>
+              {% if comment.id in attached_ids %}<span class="badge">has attachment</span>{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if next_cursor %}
+      <nav class="pagination">
+        <a href="{{ url_for('publication_comments', publication_id=publication.id, q=q, after_posted_at=next_cursor.after_posted_at, after_id=next_cursor.after_id) }}">Next page &rarr;</a>
+      </nav>
+    {% endif %}
+  {% elif q %}
+    <p class="empty-state">No comments match "{{ q }}" in this publication.</p>
+  {% else %}
+    <p class="empty-state">This publication has no comments yet.</p>
+  {% endif %}
+{% endblock %}

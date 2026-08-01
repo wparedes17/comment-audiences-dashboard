@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Dashboard Sentiment{% endblock %}</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 60rem; padding: 0 1rem; color: #1a1a1a; }
+    a { color: #1a5fb4; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd; vertical-align: top; }
+    th { font-weight: 600; }
+    .muted { color: #666; }
+    .badge { display: inline-block; font-size: 0.75rem; padding: 0.1rem 0.4rem; border: 1px solid #999; border-radius: 0.25rem; color: #444; }
+    .badge-positive { border-color: #2e7d32; color: #2e7d32; }
+    .badge-neutral { border-color: #757575; color: #757575; }
+    .badge-negative { border-color: #c62828; color: #c62828; }
+    .badge-unlabeled { border-style: dashed; color: #999; }
+    .empty-state { padding: 2rem 0; color: #555; }
+    form.search { margin: 1rem 0; }
+    input[type="text"] { padding: 0.35rem; width: 20rem; }
+    button { padding: 0.35rem 0.75rem; }
+    .comment-body { white-space: pre-wrap; }
+    nav.pagination { margin-top: 1rem; }
+    section { margin: 2rem 0; }
+    .keyword-list { list-style: none; padding: 0; margin: 0.25rem 0 0; }
+    .keyword-list li { display: inline-block; margin-right: 0.5rem; color: #666; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <p><a href="{{ url_for('overview') }}">&larr; All publications</a></p>
+  {% block content %}{% endblock %}
+</body>
+</html>

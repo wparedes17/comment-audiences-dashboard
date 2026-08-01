@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Sentiment{% endblock %}
+{% block content %}
+  <h1>Publications</h1>
+
+  {% if rows %}
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Status</th>
+          <th>Dates</th>
+          <th>Comments</th>
+          <th>Sentiment (latest week)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td><a href="{{ url_for('publication_detail', publication_id=row.publication.id) }}">{{ row.publication.title }}</a></td>
+            <td>{{ row.publication.status or "—" }}</td>
+            <td class="muted">
+              {% if row.publication.opens_at %}{{ row.publication.opens_at.strftime("%Y-%m-%d") }}{% else %}—{% endif %}
+              &ndash;
+              {% if row.publication.closes_at %}{{ row.publication.closes_at.strftime("%Y-%m-%d") }}{% else %}—{% endif %}
+            </td>
+            <td>{{ row.comment_count }}</td>
+            <td>
+              {% if row.latest_sentiment %}
+                <span class="badge badge-positive">{{ row.latest_sentiment.positive_count }} pos</span>
+                <span class="badge badge-neutral">{{ row.latest_sentiment.neutral_count }} neu</span>
+                <span class="badge badge-negative">{{ row.latest_sentiment.negative_count }} neg</span>
+              {% else %}
+                <span class="muted">not yet analyzed</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty-state">No publications in scope.</p>
+  {% endif %}
+{% endblock %}
