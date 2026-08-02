@@ -1,11 +1,11 @@
-function renderWeeklySentimentChart(canvasId, jsonUrl) {
+function renderDailySentimentChart(canvasId, jsonUrl) {
   fetch(jsonUrl)
     .then((response) => response.json())
-    .then((weeks) => {
+    .then((days) => {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
 
-      if (weeks.length === 0) {
+      if (days.length === 0) {
         canvas.replaceWith(document.createTextNode("No sentiment data yet for this publication."));
         return;
       }
@@ -13,11 +13,11 @@ function renderWeeklySentimentChart(canvasId, jsonUrl) {
       new Chart(canvas, {
         type: "bar",
         data: {
-          labels: weeks.map((week) => week.week_start_date),
+          labels: days.map((day) => day.date),
           datasets: [
-            { label: "Positive", data: weeks.map((week) => week.positive_count), backgroundColor: "#2e7d32" },
-            { label: "Neutral", data: weeks.map((week) => week.neutral_count), backgroundColor: "#757575" },
-            { label: "Negative", data: weeks.map((week) => week.negative_count), backgroundColor: "#c62828" },
+            { label: "Positive", data: days.map((day) => day.positive_count), backgroundColor: "#2e7d32" },
+            { label: "Neutral", data: days.map((day) => day.neutral_count), backgroundColor: "#757575" },
+            { label: "Negative", data: days.map((day) => day.negative_count), backgroundColor: "#c62828" },
           ],
         },
         options: {

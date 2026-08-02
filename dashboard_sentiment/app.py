@@ -13,7 +13,7 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask, abort, current_app, jsonify, render_template, request
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import Date, and_, func, or_, select
 
 from . import auth, db, scope
 from .models import (
@@ -63,8 +63,8 @@ def create_app() -> Flask:
     app.add_url_rule("/", view_func=overview)
     app.add_url_rule("/publications/<int:publication_id>", view_func=publication_detail)
     app.add_url_rule(
-        "/publications/<int:publication_id>/weekly-sentiment.json",
-        view_func=publication_weekly_sentiment_json,
+        "/publications/<int:publication_id>/daily-sentiment.json",
+        view_func=publication_daily_sentiment_json,
     )
     app.add_url_rule(
         "/publications/<int:publication_id>/topics/<int:topic_id>", view_func=topic_detail_view
@@ -160,6 +160,48 @@ def _latest_weekly_sentiment_by_publication(
     return {row.publication_id: row for row in latest_rows}
 
 
+def _daily_sentiment_series(publication_id: int) -> list[dict]:
+    """Live day-grain sentiment rollup, computed from comments + comment_enrichments.
+
+    Mirrors the Enricher's own weekly rollup SQL (rollup_weekly_sentiment.py's
+    date_trunc/count-filter/avg pattern) but at day grain and evaluated at
+    request time instead of upserted into weekly_sentiment_stats - this app
+    never writes to the DB, and day grain isn't precomputed anywhere.
+    """
+    day = func.date_trunc("day", Comment.posted_at).cast(Date).label("day")
+    rows = db.Session.execute(
+        select(
+            day,
+            func.count(Comment.id).filter(CommentEnrichment.sentiment_label == "positive").label(
+                "positive_count"
+            ),
+            func.count(Comment.id).filter(CommentEnrichment.sentiment_label == "neutral").label(
+                "neutral_count"
+            ),
+            func.count(Comment.id).filter(CommentEnrichment.sentiment_label == "negative").label(
+                "negative_count"
+            ),
+            func.avg(CommentEnrichment.sentiment_score).label("avg_sentiment_score"),
+        )
+        .select_from(Comment)
+        .join(CommentEnrichment, CommentEnrichment.comment_id == Comment.id)
+        .where(Comment.publication_id == publication_id)
+        .group_by(day)
+        .order_by(day)
+    ).all()
+
+    return [
+        {
+            "date": row.day.isoformat(),
+            "positive_count": row.positive_count,
+            "neutral_count": row.neutral_count,
+            "negative_count": row.negative_count,
+            "avg_sentiment_score": row.avg_sentiment_score,
+        }
+        for row in rows
+    ]
+
+
 def publication_detail(publication_id: int):
     publication = _get_in_scope_publication_or_404(publication_id)
 
@@ -192,12 +234,7 @@ def publication_detail(publication_id: int):
         .limit(RELEVANT_COMMENTS_LIMIT)
     ).all()
 
-    latest_stats = db.Session.execute(
-        select(WeeklySentimentStats)
-        .where(WeeklySentimentStats.publication_id == publication_id)
-        .order_by(WeeklySentimentStats.week_start_date.desc())
-        .limit(1)
-    ).scalars().first()
+    daily_sentiment = _daily_sentiment_series(publication_id)
 
     return render_template(
         "publication_detail.html",
@@ -205,31 +242,13 @@ def publication_detail(publication_id: int):
         topic_rows=topic_rows,
         summaries=summaries,
         relevant_comments=relevant_comments,
-        latest_stats=latest_stats,
+        daily_sentiment=daily_sentiment,
     )
 
 
-def publication_weekly_sentiment_json(publication_id: int):
+def publication_daily_sentiment_json(publication_id: int):
     _get_in_scope_publication_or_404(publication_id)
-
-    stats = db.Session.execute(
-        select(WeeklySentimentStats)
-        .where(WeeklySentimentStats.publication_id == publication_id)
-        .order_by(WeeklySentimentStats.week_start_date)
-    ).scalars().all()
-
-    return jsonify(
-        [
-            {
-                "week_start_date": row.week_start_date.isoformat(),
-                "positive_count": row.positive_count,
-                "neutral_count": row.neutral_count,
-                "negative_count": row.negative_count,
-                "avg_sentiment_score": row.avg_sentiment_score,
-            }
-            for row in stats
-        ]
-    )
+    return jsonify(_daily_sentiment_series(publication_id))
 
 
 def topic_detail_view(publication_id: int, topic_id: int):

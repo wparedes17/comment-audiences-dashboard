@@ -12,12 +12,12 @@
 
   <section>
     <h2>Sentiment over time</h2>
-    {% if latest_stats %}
+    {% if daily_sentiment %}
       <canvas id="sentiment-chart" height="80"></canvas>
       <script>
-        renderWeeklySentimentChart(
+        renderDailySentimentChart(
           "sentiment-chart",
-          "{{ url_for('publication_weekly_sentiment_json', publication_id=publication.id) }}"
+          "{{ url_for('publication_daily_sentiment_json', publication_id=publication.id) }}"
         );
       </script>
     {% else %}
