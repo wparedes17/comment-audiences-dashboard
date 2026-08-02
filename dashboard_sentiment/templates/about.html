@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Acerca de — Dashboard Sentiment{% endblock %}
+{% block content %}
+  <h1>Acerca de este panel</h1>
+  <p>
+    Este panel muestra, de forma automática, un análisis de los comentarios ciudadanos recibidos
+    en las consultas públicas listadas en la página principal.
+  </p>
+
+  <section>
+    <h2>¿Cómo se analizan los comentarios?</h2>
+    <p>Un sistema de inteligencia artificial revisa cada comentario y le asigna automáticamente:</p>
+    <ul>
+      <li>
+        <strong>Un sentimiento</strong> (positivo, neutral o negativo), que se resume en la
+        gráfica de "Sentimiento a través del tiempo" de cada consulta.
+      </li>
+      <li>
+        <strong>Un tema</strong>, agrupando comentarios que hablan de asuntos similares
+        (sección "Temas").
+      </li>
+      <li>
+        <strong>Una relevancia</strong>, para destacar los comentarios más significativos de
+        cada consulta (sección "Comentarios más relevantes").
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>¿Cómo se generan los resúmenes?</h2>
+    <p>
+      Las secciones de Sugerencias, Preocupaciones, Acuerdos, Desacuerdos y Resumen general
+      también se generan automáticamente a partir de los comentarios recibidos.
+    </p>
+  </section>
+
+  <section>
+    <h2>¿Con qué frecuencia se actualiza?</h2>
+    <p>
+      El análisis no se genera al momento en que visitas la página: se actualiza periódicamente
+      (varias veces al día), por lo que puede tardar un poco en reflejar los comentarios más
+      recientes.
+    </p>
+  </section>
+
+  <section>
+    <h2>Una nota importante</h2>
+    <p>
+      Este análisis es generado de forma automática y puede contener imprecisiones. No sustituye
+      la lectura de los comentarios originales, disponibles en la sección de comentarios de cada
+      consulta.
+    </p>
+  </section>
+{% endblock %}

@@ -1,13 +1,22 @@
 function renderDailySentimentChart(canvasId, jsonUrl) {
-  fetch(jsonUrl)
-    .then((response) => response.json())
-    .then((days) => {
-      const canvas = document.getElementById(canvasId);
-      if (!canvas) return;
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
 
+  fetch(jsonUrl)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Request to ${jsonUrl} failed with status ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((days) => {
       if (days.length === 0) {
         canvas.replaceWith(document.createTextNode("No sentiment data yet for this publication."));
         return;
+      }
+
+      if (typeof Chart === "undefined") {
+        throw new Error("Chart.js did not load");
       }
 
       new Chart(canvas, {
@@ -25,5 +34,9 @@ function renderDailySentimentChart(canvasId, jsonUrl) {
           scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
         },
       });
+    })
+    .catch((error) => {
+      console.error("renderDailySentimentChart:", error);
+      canvas.replaceWith(document.createTextNode("Could not load sentiment chart."));
     });
 }

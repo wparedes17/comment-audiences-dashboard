@@ -61,6 +61,7 @@ def create_app() -> Flask:
     app.config["ALLOWED_PUBLICATION_IDS"] = _resolve_scope_or_fail()
 
     app.add_url_rule("/", view_func=overview)
+    app.add_url_rule("/about", view_func=about)
     app.add_url_rule("/publications/<int:publication_id>", view_func=publication_detail)
     app.add_url_rule(
         "/publications/<int:publication_id>/daily-sentiment.json",
@@ -134,6 +135,10 @@ def overview():
         for pub in publications
     ]
     return render_template("overview.html", rows=rows)
+
+
+def about():
+    return render_template("about.html")
 
 
 def _latest_weekly_sentiment_by_publication(
